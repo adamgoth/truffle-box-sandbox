@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
+//import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
+import Conference from '../build/contracts/Conference.json'
 import Web3 from 'web3'
 
 import './css/oswald.css'
@@ -12,7 +13,8 @@ class App extends Component {
     super(props)
 
     this.state = {
-      storageValue: 0
+      accounts: [],
+      numRegistrants: 0
     }
   }
 
@@ -30,35 +32,56 @@ class App extends Component {
     // Get the RPC provider and setup our SimpleStorage contract.
     const provider = new Web3.providers.HttpProvider('http://localhost:8545')
     const contract = require('truffle-contract')
-    const simpleStorage = contract(SimpleStorageContract)
-    simpleStorage.setProvider(provider)
+    //const simpleStorage = contract(SimpleStorageContract)
+    const conference = contract(Conference)
+    //simpleStorage.setProvider(provider)
+    conference.setProvider(provider)
+
+    // Get accounts.
+    // web3RPC.eth.getAccounts(function(error, accounts) {
+    //   console.log(accounts)
+    //
+    //    simpleStorage.deployed().then(function(instance) {
+    //      simpleStorageInstance = instance
+    //
+    //
+    //     // Stores a value of 5.
+    //     return simpleStorageInstance.set(5, {from: accounts[0]})
+    //   }).then(function(result) {
+    //     // Get the value from the contract to prove it worked.
+    //     return simpleStorageInstance.get.call(accounts[0])
+    //   }).then(function(result) {
+    //     // Update state with the result.
+    //     return self.setState({ storageValue: result.c[0] })
+    //   })
+    // })
 
     // Get Web3 so we can get our accounts.
     const web3RPC = new Web3(provider)
 
-    // Declaring this for later so we can chain functions on SimpleStorage.
-    var simpleStorageInstance
+    var conferenceInstance
 
-    // Get accounts.
     web3RPC.eth.getAccounts(function(error, accounts) {
       console.log(accounts)
 
-      simpleStorage.deployed().then(function(instance) {
-        simpleStorageInstance = instance
+      conference.deployed().then(function(instance) {
+        conferenceInstance = instance
 
-        // Stores a value of 5.
-        return simpleStorageInstance.set(5, {from: accounts[0]})
+        return conferenceInstance.numRegistrants.call()
       }).then(function(result) {
-        // Get the value from the contract to prove it worked.
-        return simpleStorageInstance.get.call(accounts[0])
-      }).then(function(result) {
-        // Update state with the result.
-        return self.setState({ storageValue: result.c[0] })
+
+        return self.setState({ accounts, numRegistrants: result.c[0] })
       })
     })
   }
 
   render() {
+    console.log(this.state)
+    
+    var displayAccounts = this.state.accounts.map(account => {
+      return <p key={account}>{account}</p>;
+    });
+
     return (
       <div className="App">
         <nav className="navbar pure-menu pure-menu-horizontal">
@@ -75,10 +98,10 @@ class App extends Component {
             <div className="pure-u-1-1">
               <h1>Good to Go!</h1>
               <p>Your Truffle Box is installed and ready.</p>
-              <h2>Smart Contract Example</h2>
-              <p>The below will show a stored value of 5 by default if your contracts compiled and migrated successfully.</p>
-              <p>Try changing the value stored on <strong>line 50</strong> of App.js.</p>
-              <p>The stored value is: {this.state.storageValue}</p>
+              <h2>Number of registrants</h2>
+              <p>The number of registrants is: {this.state.numRegistrants}</p>
+              <h2>Accounts</h2>
+              {displayAccounts}
             </div>
           </div>
         </main>
